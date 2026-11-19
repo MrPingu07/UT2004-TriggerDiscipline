@@ -9,7 +9,7 @@ classes and it does not copy properties at runtime.
 2. `ModifyWeapon` maps each `Weapon.FireModeClass[i]` to an enhanced class **only when
    the original class is exactly a known stock or UTClassic fire mode**.
 3. Each enhanced class `extends` that exact original class and overrides only
-   `DoFireEffect()`.
+   `DoFireEffect()` plus `AdjustAim()`.
 4. `Weapon.PostBeginPlay` instantiates the enhanced class, so `Weapon.AmmoClass[i]`
    (which is taken from `FireMode[i].AmmoClass` — see `Weapon.uc:762`) is inherited
    correctly. This is why the old generic-base approach produced weapons with no ammo.
@@ -21,6 +21,7 @@ FireModeClass[i] (exact stock class)
 TriggerDiscipline<Weapon><Mode> extends <StockClass>
         |
         +-- DoFireEffect(): apply speed modifiers, call Super, restore
+        +-- AdjustAim(): call Super, then add the speed-based aim cone
 ```
 
 ## Why exact matching
@@ -62,7 +63,22 @@ function DoFireEffect()
 
 - `DamageAtten` — read by `InstantFire.DoTrace`, `ProjectileFire.SpawnProjectile`,
   `RocketFire.SpawnProjectile`, `BioChargedFire`, `AssaultGrenade`, etc.
-- `Spread` / `AimError` — used by the trace/projectile spawn.
+- `Spread` — used by the trace/projectile spawn when the mode defines a non-zero value.
+- `AimError` — mostly an AI hint; scaled for consistency but not relied on for players.
+
+Each wrapper also overrides `AdjustAim()`:
+
+```unrealscript
+function Rotator AdjustAim(Vector Start, float InAimError)
+{
+    return class'TriggerDisciplineMut'.static.ApplyAimDeviation(
+        Self, Super.AdjustAim(Start, InAimError));
+}
+```
+
+`Super.AdjustAim()` keeps weapon-specific behaviour (Shock combo target, Shield Gun,
+Sniper, etc.) and `ApplyAimDeviation` adds the speed-based random cone on top. This is
+what makes accuracy apply to weapons whose `Spread` is permanently zero.
 
 Because the current values are captured and restored around `Super.DoFireEffect()`,
 vanilla per-shot behaviour is preserved and values never compound across shots.
@@ -100,7 +116,17 @@ Accuracy and spread:
 AccPct     = StillAccuracyPct + (RunAccuracyPct - StillAccuracyPct) * SpeedFactor
 AccPct     = Clamp(AccPct, 50, 100)
 SpreadMult = Clamp(1.5 - AccPct / 100, 0.5, 1.0)
+Inaccuracy = Clamp((100 - AccPct) / 50, 0, 1)
+Deviation  = Inaccuracy * F.AimError * AimDeviationScale
 ```
+
+`Spread` scaling alone only works for the handful of fire modes that define a non-zero
+`Spread` (Assault Rifle, Minigun, Flak). `ShockBeamFire`, `SniperFire`, `LinkFire`,
+`ShieldFire` and most projectile modes leave it at `0`, and `PlayerController.AdjustAim`
+ignores `AimError` for human players. The wrappers therefore override `AdjustAim()` and
+call `ApplyAimDeviation`, which adds a random cone of `Deviation` rotator units around
+the vanilla aim direction. Every stock/UTClassic fire mode calls `AdjustAim()` before
+tracing or spawning, so this affects the whole arsenal, Shock Rifle included.
 
 Damage:
 
@@ -109,7 +135,8 @@ BaseDamageMult = Clamp(StillDamageMult + (RunDamageMult - StillDamageMult)
                        * SpeedFactor, 0, 2)
 ```
 
-The HUD shows `AccPct` directly: 50% = vanilla spread, 100% = half spread.
+The HUD shows `AccPct` directly: 50% = vanilla spread plus a half-`AimError` cone,
+100% = half spread and no added cone.
 
 ## UDamage
 
@@ -161,6 +188,9 @@ three checkboxes:
 - Stack with UDamage
 - Show onscreen indicators
 - Bot AI crouch hints
+
+`AimDeviationScale` (default `0.5`, INI only) controls the size of the random aim cone
+relative to each fire mode's `AimError`.
 
 **OK** writes `class'TriggerDisciplineMut'.default.*` and calls `StaticSaveConfig()`.
 **Restore Defaults** fills the fields with the shipped defaults (without saving until

@@ -32,6 +32,11 @@ var config bool bStackMultiplicatively;    // Stack with UDamage (x2) instead of
 var config bool bEnableBotAI;              // Bot AI crouch hints
 var config bool bDebugDraw;                // Draw on-screen damage/accuracy
 
+// Extra angular aim deviation applied on top of the weapon's native spread.
+// At 50% accuracy a shot deviates by up to AimDeviationScale * AimError;
+// at 100% accuracy there is no extra deviation.  0.5 is a good default.
+var config float AimDeviationScale;
+
 //--- Internal state ----------------------------------------------------------
 var TriggerDisciplinePawn TDPawn;
 
@@ -104,6 +109,44 @@ static function bool ApplyModifiers(WeaponFire F, float BaseSpread, float BaseAi
 	F.AimError = BaseAimError * SpreadMult;
 
 	return true;
+}
+
+// Adds a random angular deviation to an already computed aim direction.
+// Every vanilla/UTClassic fire mode funnels through AdjustAim(), but most of
+// them have Spread == 0 (notably ShockBeamFire and SniperFire), so scaling
+// Spread alone does nothing for them.  AimError is a per-weapon magnitude
+// expressed in rotator units and is unused by PlayerController.AdjustAim for
+// human players, which makes it a convenient baseline cone for this mutator.
+static function Rotator ApplyAimDeviation(WeaponFire F, Rotator Aim)
+{
+	local TriggerDisciplineMut Mut;
+	local Pawn P;
+	local float Accuracy, Inaccuracy, Magnitude;
+
+	if (F == None || F.Weapon == None)
+		return Aim;
+
+	Mut = FindMutator(F.Level);
+	if (Mut == None)
+		return Aim;
+
+	P = F.Weapon.Instigator;
+	if (P == None || Mut.IsInVehicle(P))
+		return Aim;
+
+	Accuracy = Mut.GetAccuracyPct(P);
+	Inaccuracy = Mut.ClampFloat((100.0 - Accuracy) / 50.0, 0.0, 1.0);
+	if (Inaccuracy <= 0.0)
+		return Aim;
+
+	Magnitude = Inaccuracy * F.AimError * Mut.AimDeviationScale;
+	if (Magnitude <= 0.0)
+		return Aim;
+
+	Aim.Yaw += int((FRand() * 2.0 - 1.0) * Magnitude);
+	Aim.Pitch += int((FRand() * 2.0 - 1.0) * Magnitude);
+
+	return Aim;
 }
 
 // Damage multiplier to write into a fire mode's DamageAtten (or into a custom
@@ -439,6 +482,7 @@ defaultproperties
 	bStackMultiplicatively=False
 	bEnableBotAI=True
 	bDebugDraw=True
+	AimDeviationScale=0.5
 	bAlwaysRelevant=True
 	bAddToServerPackages=True
 	RemoteRole=ROLE_SimulatedProxy

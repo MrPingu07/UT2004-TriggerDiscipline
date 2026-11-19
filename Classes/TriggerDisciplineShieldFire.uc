@@ -5,6 +5,14 @@
 //=============================================================================
 class TriggerDisciplineShieldFire extends ShieldFire;
 
+// Every stock/UTClassic fire mode calls AdjustAim() before firing.  Most of
+// them leave Spread at zero, so the spread multiplier alone has no effect on
+// them.  Inject the speed-based deviation here instead.
+function Rotator AdjustAim(Vector Start, float InAimError)
+{
+	return class'TriggerDisciplineMut'.static.ApplyAimDeviation(Self, Super.AdjustAim(Start, InAimError));
+}
+
 // ShieldFire computes damage locally from MinDamage/MaxDamage instead of using
 // DamageAtten, so scale those around the vanilla implementation.
 function DoFireEffect()

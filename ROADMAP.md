@@ -22,6 +22,8 @@
 - [x] Live on-screen indicators (`Damage: x1.38`, `Accuracy: 50%`)
 - [x] HUD replication to network clients
 - [x] Non-compounding per-shot modifier application
+- [x] Universal aim deviation via `AdjustAim()` so zero-`Spread` weapons (Shock Rifle,
+      Sniper, Link, Shield, projectiles) are affected too
 
 ## Next
 

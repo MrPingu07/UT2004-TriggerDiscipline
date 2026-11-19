@@ -6,8 +6,8 @@ speed. Two endpoints are configured: one at 0% of `Pawn.GroundSpeed` and one at
 
 ## Features
 
-- **Speed-based accuracy**: spread is interpolated between the still and running
-  endpoints.
+- **Speed-based accuracy**: native spread is scaled and a real aim cone is added, so
+  every weapon is affected — including the Shock Rifle, whose native `Spread` is zero.
 - **Speed-based damage**: damage multiplier is interpolated the same way.
 - **Speed is measured against `Pawn.GroundSpeed`** (the server-dictated max running
   speed), not hardcoded units.
@@ -27,9 +27,15 @@ speed. Two endpoints are configured: one at 0% of `Pawn.GroundSpeed` and one at
 | Accuracy | 100% | 50% |
 | Damage multiplier | 1.50x | 1.00x |
 
-Accuracy is expressed as a percentage: **50% = vanilla spread**, **100% = half
-spread** (twice as accurate). The GUI accepts 50-100%. The on-screen **Accuracy**
-indicator uses the same 50-100 scale.
+Accuracy is expressed as a percentage: **50% = vanilla spread plus a half-`AimError`
+aim cone**, **100% = half spread and no added cone** (laser-accurate for hitscan
+weapons). The GUI accepts 50-100%. The on-screen **Accuracy** indicator uses the same
+50-100 scale.
+
+Why an extra cone: most stock fire modes (`ShockBeamFire`, `SniperFire`, `LinkFire`,
+`ShieldFire`, projectile modes) leave `Spread` at `0`, so simply scaling it did nothing
+for them. The mutator overrides `AdjustAim()` in every wrapper and adds a random
+angular deviation based on the weapon's `AimError`.
 
 ## Installation
 
@@ -52,6 +58,7 @@ RunDamageMult=1.0            ; damage at 100% speed (0.0-2.0)
 bStackMultiplicatively=False ; stack with UDamage instead of taking the max
 bDebugDraw=True              ; on-screen Damage / Accuracy indicators
 bEnableBotAI=True            ; bot crouch hints
+AimDeviationScale=0.5        ; aim-cone size at 50% accuracy (INI only)
 ```
 
 ## Compatibility
