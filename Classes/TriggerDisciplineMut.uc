@@ -27,6 +27,9 @@ var config float RunAccuracyPct;           // accuracy at 100% of GroundSpeed
 var config float StillDamageMult;          // damage at 0% of GroundSpeed
 var config float RunDamageMult;            // damage at 100% of GroundSpeed
 
+// Extra damage multiplier applied only while fully crouched.  Range: 0x-10x.
+var config float CrouchingDamageMult;
+
 //--- Toggles -----------------------------------------------------------------
 var config bool bStackMultiplicatively;    // Stack with UDamage (x2) instead of max()
 var config bool bEnableBotAI;              // Bot AI crouch hints
@@ -411,6 +414,17 @@ function float GetAccuracyPercent(Pawn P)
 	return GetAccuracyPct(P);
 }
 
+// True only when the pawn is fully crouched.  bIsCrouched is set by the
+// physics code once the crouch transition completes; bWantsToCrouch goes false
+// as soon as the player releases crouch, so this excludes both transitions.
+function bool IsFullyCrouched(Pawn P)
+{
+	if (P == None)
+		return false;
+
+	return P.bIsCrouched && P.bWantsToCrouch;
+}
+
 // UDamage is applied by Pawn.TakeDamage() (Damage *= 2), not by the weapon.
 function float GetUDamageFactor(Pawn P)
 {
@@ -440,6 +454,10 @@ function float GetFinalDamageMult(Pawn P, float BaseMult)
 		else
 			FinalMult = Max(FinalMult, 2.0);
 	}
+
+	// Crouching bonus is applied last, after speed and UDamage.
+	if (IsFullyCrouched(P))
+		FinalMult *= CrouchingDamageMult;
 
 	return FinalMult;
 }
@@ -480,6 +498,7 @@ defaultproperties
 	RunAccuracyPct=50.0
 	StillDamageMult=1.5
 	RunDamageMult=1.0
+	CrouchingDamageMult=1.0
 	bStackMultiplicatively=False
 	bEnableBotAI=True
 	bDebugDraw=True

@@ -18,12 +18,13 @@
 - [x] UTClassic wrappers (Classic Sniper/Rocket/Flak/Bio/Shock/Minigun/Shield/Trans)
 - [x] Ammo fix: wrappers inherit `AmmoClass` from the original fire mode
 - [x] Link beam, Shield Gun charge and Classic grenade damage scaling
-- [x] Simple Configure GUI (four fields, three toggles, Restore Defaults)
+- [x] Simple Configure GUI (five fields, three toggles, Restore Defaults)
 - [x] Live on-screen indicators (`Damage: x1.38`, `Accuracy: 50%`)
 - [x] HUD replication to network clients
 - [x] Non-compounding per-shot modifier application
 - [x] Universal aim deviation via `AdjustAim()` so zero-`Spread` weapons (Shock Rifle,
       Sniper, Link, Shield, projectiles) are affected too
+- [x] Crouching damage bonus (0x-10x), applied last and only when fully crouched
 
 ## Next
 

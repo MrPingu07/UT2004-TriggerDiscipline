@@ -21,6 +21,9 @@ Accuracy is expressed on a 0-100 scale: **0% = 1.5x native spread and a full
 `AimError` cone**, **50% = vanilla spread and a half-`AimError` cone**, **100% = half
 spread and no added cone**. The HUD shows the same value.
 
+When the pawn is fully crouched, `CrouchingDamageMult` is applied last and multiplies
+the final damage again. It is not applied while entering or leaving crouch.
+
 ## Technical design
 
 ### 1. Fire-mode replacement
@@ -119,10 +122,20 @@ shown in the GUI.
 
 ```text
 BaseDamageMult = Clamp(StillDamageMult + (RunDamageMult - StillDamageMult)
-                       * SpeedFactor, 0, 2)
+                       * SpeedFactor, 0, 10)
 ```
 
 Defaults `StillDamageMult=1.5`, `RunDamageMult=1.0`.
+
+The final multiplier then becomes:
+
+```text
+Final = UDamageAdjust(BaseDamageMult)
+if (fully crouched) Final *= CrouchingDamageMult
+```
+
+`CrouchingDamageMult` defaults to `1.0` (no bonus) and accepts 0x-10x. "Fully crouched"
+means `Pawn.bIsCrouched && Pawn.bWantsToCrouch`, which excludes both crouch transitions.
 
 ### 6. UDamage
 
@@ -132,6 +145,7 @@ Defaults `StillDamageMult=1.5`, `RunDamageMult=1.0`.
 - `GetFinalDamageMult()` computes the visible final multiplier:
   - Stack unchecked: `Max(BaseDamageMult, 2.0)`
   - Stack checked: `BaseDamageMult * 2.0`
+- The crouching bonus is applied after this, so it stacks on top of UDamage.
 - `GetDamageAttenFor()` divides the final multiplier by the engine's UDamage factor
   before writing `DamageAtten`, so the in-game damage matches the HUD.
 
@@ -238,7 +252,8 @@ at medium-long range to crouch. Optional (`bEnableBotAI`).
 - [ ] Spread and damage interpolate smoothly while accelerating/decelerating.
 - [ ] Jumping gives the 100% speed endpoint.
 - [ ] HUD `Damage` / `Accuracy` update live.
-- [ ] Configure GUI opens; only four fields and three toggles are shown.
+- [ ] Configure GUI opens; only five fields and three toggles are shown.
+- [ ] Crouching bonus applies only when fully crouched.
 - [ ] Restore Defaults works; OK saves to INI.
 - [ ] UDamage respects the Stack toggle without double-dipping.
 - [ ] Vehicle and Redeemer warhead give no bonus.

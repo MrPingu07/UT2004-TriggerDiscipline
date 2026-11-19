@@ -18,7 +18,8 @@ speed. Two endpoints are configured: one at 0% of `Pawn.GroundSpeed` and one at
   engine's built-in 2x.
 - **Live on-screen indicators**: `Damage: x1.38`, `Accuracy: 50%`.
 - **Bot AI crouch hints**.
-- **Simple Configure GUI** with four fields and three checkboxes.
+- **Crouching damage bonus** while fully crouched.
+- **Simple Configure GUI** with five fields and three checkboxes.
 
 ## Defaults
 
@@ -26,6 +27,7 @@ speed. Two endpoints are configured: one at 0% of `Pawn.GroundSpeed` and one at
 |---------|-------------|---------------|
 | Accuracy | 100% | 50% |
 | Damage multiplier | 1.50x | 1.00x |
+| Crouching damage bonus | 1.00x | n/a |
 
 Accuracy is expressed as a percentage from **0 to 100**. At 0% the weapon has 1.5x
 native spread plus a full `AimError` cone; at 50% it has vanilla spread plus a
@@ -42,7 +44,7 @@ angular deviation based on the weapon's `AimError`.
 1. Copy `TriggerDiscipline.u` and `TriggerDiscipline.ucl` into `UT2004/System`.
 2. Launch UT2004.
 3. Enable **Trigger Discipline** in the Mutators menu.
-4. Click **Configure** to edit the four values and three toggles. They are saved to
+4. Click **Configure** to edit the five values and three toggles. They are saved to
    `UT2004/System/TriggerDiscipline.ini`.
 
 ## Configuration
@@ -55,6 +57,7 @@ StillAccuracyPct=100.0       ; accuracy at 0% speed (0-100)
 RunAccuracyPct=50.0          ; accuracy at 100% speed (0-100)
 StillDamageMult=1.5          ; damage at 0% speed (0.0-10.0)
 RunDamageMult=1.0            ; damage at 100% speed (0.0-10.0)
+CrouchingDamageMult=1.0      ; bonus while fully crouched (0.0-10.0)
 bStackMultiplicatively=False ; stack with UDamage instead of taking the max
 bDebugDraw=True              ; on-screen Damage / Accuracy indicators
 bEnableBotAI=True            ; bot crouch hints

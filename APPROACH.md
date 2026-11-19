@@ -132,7 +132,9 @@ Damage:
 
 ```text
 BaseDamageMult = Clamp(StillDamageMult + (RunDamageMult - StillDamageMult)
-                       * SpeedFactor, 0, 2)
+                       * SpeedFactor, 0, 10)
+Final          = UDamageAdjust(BaseDamageMult)
+Final         *= CrouchingDamageMult   // only when fully crouched
 ```
 
 The HUD shows `AccPct` directly: 0% = 1.5x native spread and a full `AimError` cone,
@@ -148,6 +150,7 @@ The HUD shows `AccPct` directly: 0% = 1.5x native spread and a full `AimError` c
 
 - Stack unchecked: `Max(BaseDamageMult, 2.0)`
 - Stack checked: `BaseDamageMult * 2.0`
+- Crouching bonus applies last, after UDamage.
 
 Because UDamage is checked when damage is applied, a projectile whose UDamage expires
 during flight will not receive the engine's 2x. Hitscan weapons are unaffected.
@@ -178,16 +181,20 @@ their own HUD interaction.
 
 ## Configure GUI
 
-`TriggerDisciplineConfig extends GUIPage` exposes exactly four numeric fields and
+`TriggerDisciplineConfig extends GUIPage` exposes exactly five numeric fields and
 three checkboxes:
 
 - Accuracy at 0% speed (0-100)
 - Accuracy at 100% speed (0-100)
 - Damage at 0% speed (0.0-10.0)
 - Damage at 100% speed (0.0-10.0)
+- Crouching damage bonus (0.0-10.0)
 - Stack with UDamage
 - Show onscreen indicators
 - Bot AI crouch hints
+
+The crouching bonus uses `Pawn.bIsCrouched && Pawn.bWantsToCrouch`, so it only applies
+once the crouch transition has completed.
 
 `AimDeviationScale` (default `1.0`, INI only) controls the size of the random aim cone
 relative to each fire mode's `AimError`.

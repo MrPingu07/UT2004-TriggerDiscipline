@@ -2,12 +2,12 @@
 // Trigger Discipline Configuration Page
 // Shown by the "Configure" button in the Mutators menu.
 //
-// Only four numbers and three toggles are exposed.  Both numbers interpolate
+// Five numbers and three toggles are exposed.  The speed values interpolate
 // linearly between 0% and 100% of Pawn.GroundSpeed.
 //=============================================================================
 class TriggerDisciplineConfig extends GUIPage;
 
-var moEditBox StillAccuracyBox, RunAccuracyBox, StillDamageBox, RunDamageBox;
+var moEditBox StillAccuracyBox, RunAccuracyBox, StillDamageBox, RunDamageBox, CrouchingBox;
 var moCheckBox StackBox, DebugBox, BotBox;
 
 function InitComponent(GUIController MyController, GUIComponent MyOwner)
@@ -18,9 +18,10 @@ function InitComponent(GUIController MyController, GUIComponent MyOwner)
 	RunAccuracyBox   = moEditBox(Controls[5]);
 	StillDamageBox = moEditBox(Controls[7]);
 	RunDamageBox   = moEditBox(Controls[8]);
-	StackBox       = moCheckBox(Controls[9]);
-	DebugBox       = moCheckBox(Controls[10]);
-	BotBox         = moCheckBox(Controls[11]);
+	CrouchingBox   = moEditBox(Controls[9]);
+	StackBox       = moCheckBox(Controls[10]);
+	DebugBox       = moCheckBox(Controls[11]);
+	BotBox         = moCheckBox(Controls[12]);
 
 	LoadCurrentValues();
 }
@@ -31,6 +32,7 @@ function LoadCurrentValues()
 	RunAccuracyBox.SetText(string(class'TriggerDisciplineMut'.default.RunAccuracyPct));
 	StillDamageBox.SetText(string(class'TriggerDisciplineMut'.default.StillDamageMult));
 	RunDamageBox.SetText(string(class'TriggerDisciplineMut'.default.RunDamageMult));
+	CrouchingBox.SetText(string(class'TriggerDisciplineMut'.default.CrouchingDamageMult));
 	StackBox.Checked(class'TriggerDisciplineMut'.default.bStackMultiplicatively);
 	DebugBox.Checked(class'TriggerDisciplineMut'.default.bDebugDraw);
 	BotBox.Checked(class'TriggerDisciplineMut'.default.bEnableBotAI);
@@ -54,6 +56,7 @@ function bool InternalOnClick(GUIComponent Sender)
 	class'TriggerDisciplineMut'.default.RunAccuracyPct = ReadFloat(RunAccuracyBox, 0.0, 100.0);
 	class'TriggerDisciplineMut'.default.StillDamageMult = ReadFloat(StillDamageBox, 0.0, 10.0);
 	class'TriggerDisciplineMut'.default.RunDamageMult = ReadFloat(RunDamageBox, 0.0, 10.0);
+	class'TriggerDisciplineMut'.default.CrouchingDamageMult = ReadFloat(CrouchingBox, 0.0, 10.0);
 	class'TriggerDisciplineMut'.default.bStackMultiplicatively = StackBox.IsChecked();
 	class'TriggerDisciplineMut'.default.bDebugDraw = DebugBox.IsChecked();
 	class'TriggerDisciplineMut'.default.bEnableBotAI = BotBox.IsChecked();
@@ -70,6 +73,7 @@ function bool ResetToDefaults(GUIComponent Sender)
 	RunAccuracyBox.SetText("50");
 	StillDamageBox.SetText("1.5");
 	RunDamageBox.SetText("1");
+	CrouchingBox.SetText("1");
 	StackBox.Checked(False);
 	DebugBox.Checked(True);
 	BotBox.Checked(True);
@@ -111,7 +115,7 @@ defaultproperties
 	Controls(1)=GUILabel'TitleLabel'
 
 	Begin Object Class=GUILabel Name=HintLabel
-		Caption="Accuracy: 0-100%. Damage: 0x-10x. Both scale linearly with speed."
+		Caption="Accuracy: 0-100%. Damage: 0x-10x, scaling with speed. Crouching bonus applies when fully crouched."
 		TextAlign=TXTA_Center
 		TextColor=(R=200,G=200,B=200,A=255)
 		TextFont="UT2SmallFont"
@@ -193,35 +197,46 @@ defaultproperties
 	End Object
 	Controls(8)=moEditBox'RunDamageBoxEdit'
 
+	Begin Object Class=moEditBox Name=CrouchingDamageBoxEdit
+		WinWidth=0.42
+		WinHeight=0.05
+		WinLeft=0.05
+		WinTop=0.49
+		Caption="Crouching bonus (x)"
+		bReadOnly=false
+		bBoundToParent=true
+	End Object
+	Controls(9)=moEditBox'CrouchingDamageBoxEdit'
+
 	Begin Object Class=moCheckBox Name=StackBoxEdit
 		WinWidth=0.42
 		WinHeight=0.05
 		WinLeft=0.05
-		WinTop=0.55
+		WinTop=0.57
 		Caption="Stack with UDamage"
 		bBoundToParent=true
 	End Object
-	Controls(9)=moCheckBox'StackBoxEdit'
+	Controls(10)=moCheckBox'StackBoxEdit'
 
 	Begin Object Class=moCheckBox Name=DebugBoxEdit
 		WinWidth=0.42
 		WinHeight=0.05
 		WinLeft=0.05
-		WinTop=0.63
+		WinTop=0.65
 		Caption="Show onscreen indicators"
 		bBoundToParent=true
 	End Object
-	Controls(10)=moCheckBox'DebugBoxEdit'
+	Controls(11)=moCheckBox'DebugBoxEdit'
 
 	Begin Object Class=moCheckBox Name=BotBoxEdit
 		WinWidth=0.42
 		WinHeight=0.05
 		WinLeft=0.53
-		WinTop=0.63
+		WinTop=0.65
 		Caption="Bot AI crouch hints"
 		bBoundToParent=true
 	End Object
-	Controls(11)=moCheckBox'BotBoxEdit'
+	Controls(12)=moCheckBox'BotBoxEdit'
 
 	Begin Object Class=GUIButton Name=OkButton
 		Caption="OK"
@@ -232,7 +247,7 @@ defaultproperties
 		OnClick=InternalOnClick
 		bBoundToParent=true
 	End Object
-	Controls(12)=GUIButton'OkButton'
+	Controls(13)=GUIButton'OkButton'
 
 	Begin Object Class=GUIButton Name=ResetButton
 		Caption="Restore Defaults"
@@ -243,7 +258,7 @@ defaultproperties
 		OnClick=ResetToDefaults
 		bBoundToParent=true
 	End Object
-	Controls(13)=GUIButton'ResetButton'
+	Controls(14)=GUIButton'ResetButton'
 
 	Begin Object Class=GUIButton Name=CancelButton
 		Caption="Cancel"
@@ -254,7 +269,7 @@ defaultproperties
 		OnClick=InternalOnCancel
 		bBoundToParent=true
 	End Object
-	Controls(14)=GUIButton'CancelButton'
+	Controls(15)=GUIButton'CancelButton'
 
 	WinLeft=0.05
 	WinTop=0.1
