@@ -114,9 +114,9 @@ Accuracy and spread:
 
 ```text
 AccPct     = StillAccuracyPct + (RunAccuracyPct - StillAccuracyPct) * SpeedFactor
-AccPct     = Clamp(AccPct, 50, 100)
-SpreadMult = Clamp(1.5 - AccPct / 100, 0.5, 1.0)
-Inaccuracy = Clamp((100 - AccPct) / 50, 0, 1)
+AccPct     = Clamp(AccPct, 0, 100)
+SpreadMult = Clamp(1.5 - AccPct / 100, 0.5, 1.5)
+Inaccuracy = Clamp((100 - AccPct) / 100, 0, 1)
 Deviation  = Inaccuracy * F.AimError * AimDeviationScale
 ```
 
@@ -135,8 +135,8 @@ BaseDamageMult = Clamp(StillDamageMult + (RunDamageMult - StillDamageMult)
                        * SpeedFactor, 0, 2)
 ```
 
-The HUD shows `AccPct` directly: 50% = vanilla spread plus a half-`AimError` cone,
-100% = half spread and no added cone.
+The HUD shows `AccPct` directly: 0% = 1.5x native spread and a full `AimError` cone,
+50% = vanilla spread plus a half-`AimError` cone, 100% = half spread and no added cone.
 
 ## UDamage
 
@@ -181,15 +181,15 @@ their own HUD interaction.
 `TriggerDisciplineConfig extends GUIPage` exposes exactly four numeric fields and
 three checkboxes:
 
-- Accuracy at 0% speed (50-100)
-- Accuracy at 100% speed (50-100)
-- Damage at 0% speed (0.0-2.0)
-- Damage at 100% speed (0.0-2.0)
+- Accuracy at 0% speed (0-100)
+- Accuracy at 100% speed (0-100)
+- Damage at 0% speed (0.0-10.0)
+- Damage at 100% speed (0.0-10.0)
 - Stack with UDamage
 - Show onscreen indicators
 - Bot AI crouch hints
 
-`AimDeviationScale` (default `0.5`, INI only) controls the size of the random aim cone
+`AimDeviationScale` (default `1.0`, INI only) controls the size of the random aim cone
 relative to each fire mode's `AimError`.
 
 **OK** writes `class'TriggerDisciplineMut'.default.*` and calls `StaticSaveConfig()`.

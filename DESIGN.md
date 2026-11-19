@@ -17,9 +17,9 @@ With the default settings:
 | 100% (running) | 50% | 100% of vanilla | 50% of `AimError` | 1.00x |
 | Jumping / falling | 50% | 100% of vanilla | 50% of `AimError` | 1.00x |
 
-Accuracy is expressed on a 50-100 scale: **50% = vanilla spread + a visible aim
-cone**, **100% = half spread and no added aim deviation**. The HUD shows the same
-value.
+Accuracy is expressed on a 0-100 scale: **0% = 1.5x native spread and a full
+`AimError` cone**, **50% = vanilla spread and a half-`AimError` cone**, **100% = half
+spread and no added cone**. The HUD shows the same value.
 
 ## Technical design
 
@@ -64,12 +64,12 @@ SpeedFactor = Clamp(Speed / MaxSpeed, 0, 1)
 
 ```text
 AccPct     = StillAccuracyPct + (RunAccuracyPct - StillAccuracyPct) * SpeedFactor
-AccPct     = Clamp(AccPct, 50, 100)
-SpreadMult = Clamp(1.5 - AccPct / 100, 0.5, 1.0)
+AccPct     = Clamp(AccPct, 0, 100)
+SpreadMult = Clamp(1.5 - AccPct / 100, 0.5, 1.5)
 ```
 
 Defaults `StillAccuracyPct=100`, `RunAccuracyPct=50`, so still is twice as accurate as
-running. The GUI accepts 50-100. The clamp protects against manually edited INI
+running. The GUI accepts 0-100. The clamp protects against manually edited INI
 values outside that range.
 
 Applied as:
@@ -91,7 +91,7 @@ being the most obvious case. `AimError` is set on every fire mode, but
 The fix is to inject a real angular deviation into `AdjustAim()`:
 
 ```text
-Inaccuracy   = Clamp((100 - AccPct) / 50, 0, 1)
+Inaccuracy   = Clamp((100 - AccPct) / 100, 0, 1)
 Deviation    = Inaccuracy * F.AimError * AimDeviationScale   // rotator units
 Aim.Yaw     += Random(-Deviation, +Deviation)
 Aim.Pitch   += Random(-Deviation, +Deviation)
@@ -112,7 +112,7 @@ function Rotator AdjustAim(Vector Start, float InAimError)
 Shield Gun, Sniper zoom, etc.); the helper only adds the random cone. At 100% accuracy
 the deviation is zero, so a still player is laser-accurate with hitscan weapons. At
 the default 50% running accuracy the cone is half of the fire mode's `AimError`
-(`AimDeviationScale=0.5`). The scale is configurable in the INI but deliberately not
+(`AimDeviationScale=1.0`). The scale is configurable in the INI but deliberately not
 shown in the GUI.
 
 ### 5. Damage
@@ -179,10 +179,10 @@ A few fire modes do not use `DamageAtten`:
 
 ```text
 Damage: x1.38        (two decimals, includes UDamage)
-Accuracy: 50%        (50-100%)
+Accuracy: 50%        (0-100%)
 ```
 
-`Accuracy` is the same 50-100 value used by the GUI and by `GetSpreadMult`.
+`Accuracy` is the same 0-100 value used by the GUI and by `GetSpreadMult`.
 
 The mutator is replicated (`bAlwaysRelevant`, `RemoteRole=ROLE_SimulatedProxy`) so
 remote clients can run their own HUD interaction. `bDebugDraw` defaults to `True`.
@@ -191,13 +191,13 @@ remote clients can run their own HUD interaction. `bDebugDraw` defaults to `True
 
 `TriggerDisciplineConfig extends GUIPage` (`XInterface`) exposes exactly:
 
-- `StillAccuracyPct` — 50-100
-- `RunAccuracyPct` — 50-100
-- `StillDamageMult` — 0.0-2.0
-- `RunDamageMult` — 0.0-2.0
+- `StillAccuracyPct` — 0-100
+- `RunAccuracyPct` — 0-100
+- `StillDamageMult` — 0.0-10.0
+- `RunDamageMult` — 0.0-10.0
 - `bStackMultiplicatively`, `bDebugDraw`, `bEnableBotAI`
 
-`AimDeviationScale` (default `0.5`) is an INI-only tuning value.
+`AimDeviationScale` (default `1.0`) is an INI-only tuning value.
 
 OK validates, writes `class'TriggerDisciplineMut'.default.*`, and calls
 `StaticSaveConfig()`. **Restore Defaults** repopulates the fields without saving until

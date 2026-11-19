@@ -50,10 +50,10 @@ function float ReadFloat(moEditBox Box, float MinValue, float MaxValue)
 // OK button
 function bool InternalOnClick(GUIComponent Sender)
 {
-	class'TriggerDisciplineMut'.default.StillAccuracyPct = ReadFloat(StillAccuracyBox, 50.0, 100.0);
-	class'TriggerDisciplineMut'.default.RunAccuracyPct = ReadFloat(RunAccuracyBox, 50.0, 100.0);
-	class'TriggerDisciplineMut'.default.StillDamageMult = ReadFloat(StillDamageBox, 0.0, 2.0);
-	class'TriggerDisciplineMut'.default.RunDamageMult = ReadFloat(RunDamageBox, 0.0, 2.0);
+	class'TriggerDisciplineMut'.default.StillAccuracyPct = ReadFloat(StillAccuracyBox, 0.0, 100.0);
+	class'TriggerDisciplineMut'.default.RunAccuracyPct = ReadFloat(RunAccuracyBox, 0.0, 100.0);
+	class'TriggerDisciplineMut'.default.StillDamageMult = ReadFloat(StillDamageBox, 0.0, 10.0);
+	class'TriggerDisciplineMut'.default.RunDamageMult = ReadFloat(RunDamageBox, 0.0, 10.0);
 	class'TriggerDisciplineMut'.default.bStackMultiplicatively = StackBox.IsChecked();
 	class'TriggerDisciplineMut'.default.bDebugDraw = DebugBox.IsChecked();
 	class'TriggerDisciplineMut'.default.bEnableBotAI = BotBox.IsChecked();
@@ -111,7 +111,7 @@ defaultproperties
 	Controls(1)=GUILabel'TitleLabel'
 
 	Begin Object Class=GUILabel Name=HintLabel
-		Caption="Accuracy: 50 = vanilla spread, 100 = half spread. Damage: 0x-2x. Both scale linearly with speed."
+		Caption="Accuracy: 0-100%. Damage: 0x-10x. Both scale linearly with speed."
 		TextAlign=TXTA_Center
 		TextColor=(R=200,G=200,B=200,A=255)
 		TextFont="UT2SmallFont"
@@ -141,7 +141,7 @@ defaultproperties
 		WinHeight=0.05
 		WinLeft=0.05
 		WinTop=0.26
-		Caption="At 0% speed (50-100%)"
+		Caption="At 0% speed (0-100%)"
 		bReadOnly=false
 		bBoundToParent=true
 	End Object
@@ -152,7 +152,7 @@ defaultproperties
 		WinHeight=0.05
 		WinLeft=0.53
 		WinTop=0.26
-		Caption="At 100% speed (50-100%)"
+		Caption="At 100% speed (0-100%)"
 		bReadOnly=false
 		bBoundToParent=true
 	End Object

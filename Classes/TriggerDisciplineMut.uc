@@ -18,12 +18,12 @@ class TriggerDisciplineMut extends Mutator
 	placeable;
 
 //--- Configurable tuning (GUI exposes only these four numbers) --------------
-// Accuracy percentage.  50 = vanilla spread, 100 = half spread (twice as
-// accurate).  Range: 50-100.
+// Accuracy percentage.  0 = very inaccurate, 100 = laser accurate.
+// Range: 0-100.
 var config float StillAccuracyPct;         // accuracy at 0% of GroundSpeed
 var config float RunAccuracyPct;           // accuracy at 100% of GroundSpeed
 
-// Damage multiplier.  Range: 0x-2x.
+// Damage multiplier.  Range: 0x-10x.
 var config float StillDamageMult;          // damage at 0% of GroundSpeed
 var config float RunDamageMult;            // damage at 100% of GroundSpeed
 
@@ -33,8 +33,9 @@ var config bool bEnableBotAI;              // Bot AI crouch hints
 var config bool bDebugDraw;                // Draw on-screen damage/accuracy
 
 // Extra angular aim deviation applied on top of the weapon's native spread.
-// At 50% accuracy a shot deviates by up to AimDeviationScale * AimError;
-// at 100% accuracy there is no extra deviation.  0.5 is a good default.
+// At 0% accuracy a shot deviates by up to AimDeviationScale * AimError;
+// at 100% accuracy there is no extra deviation.  1.0 is a good default,
+// which gives a half-AimError cone at the default 50% running accuracy.
 var config float AimDeviationScale;
 
 //--- Internal state ----------------------------------------------------------
@@ -135,7 +136,7 @@ static function Rotator ApplyAimDeviation(WeaponFire F, Rotator Aim)
 		return Aim;
 
 	Accuracy = Mut.GetAccuracyPct(P);
-	Inaccuracy = Mut.ClampFloat((100.0 - Accuracy) / 50.0, 0.0, 1.0);
+	Inaccuracy = Mut.ClampFloat((100.0 - Accuracy) / 100.0, 0.0, 1.0);
 	if (Inaccuracy <= 0.0)
 		return Aim;
 
@@ -369,8 +370,7 @@ function float GetSpeedFraction(Pawn P)
 	return ClampFloat(Speed / MaxSpeed, 0.0, 1.0);
 }
 
-// Accuracy percentage interpolated by speed.  50 = vanilla spread,
-// 100 = half spread.
+// Accuracy percentage interpolated by speed.  0 = worst, 100 = laser.
 function float GetAccuracyPct(Pawn P)
 {
 	local float Pct, T;
@@ -381,15 +381,16 @@ function float GetAccuracyPct(Pawn P)
 	T = GetSpeedFraction(P);
 	Pct = StillAccuracyPct + (RunAccuracyPct - StillAccuracyPct) * T;
 
-	return ClampFloat(Pct, 50.0, 100.0);
+	return ClampFloat(Pct, 0.0, 100.0);
 }
 
-// Convert the accuracy percentage into a spread multiplier.
-//   50%  -> 1.0 (vanilla spread)
+// Convert the accuracy percentage into a native-spread multiplier.
+//     0% -> 1.5 (50% more spread than vanilla)
+//    50% -> 1.0 (vanilla spread)
 //   100% -> 0.5 (half spread / twice as accurate)
 function float GetSpreadMult(Pawn P)
 {
-	return ClampFloat(1.5 - GetAccuracyPct(P) / 100.0, 0.5, 1.0);
+	return ClampFloat(1.5 - GetAccuracyPct(P) / 100.0, 0.5, 1.5);
 }
 
 // Base damage multiplier before UDamage is taken into account.
@@ -401,10 +402,10 @@ function float GetBaseDamageMult(Pawn P)
 		return 1.0;
 
 	T = GetSpeedFraction(P);
-	return ClampFloat(StillDamageMult + (RunDamageMult - StillDamageMult) * T, 0.0, 2.0);
+	return ClampFloat(StillDamageMult + (RunDamageMult - StillDamageMult) * T, 0.0, 10.0);
 }
 
-// HUD accuracy, using the same 50-100 scale as the config fields.
+// HUD accuracy, using the same 0-100 scale as the config fields.
 function float GetAccuracyPercent(Pawn P)
 {
 	return GetAccuracyPct(P);
@@ -482,7 +483,7 @@ defaultproperties
 	bStackMultiplicatively=False
 	bEnableBotAI=True
 	bDebugDraw=True
-	AimDeviationScale=0.5
+	AimDeviationScale=1.0
 	bAlwaysRelevant=True
 	bAddToServerPackages=True
 	RemoteRole=ROLE_SimulatedProxy

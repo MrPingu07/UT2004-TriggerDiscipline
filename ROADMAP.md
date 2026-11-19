@@ -5,8 +5,8 @@
 - [x] Single speed-based interpolation for spread and damage
 - [x] Endpoint config: accuracy at 0%/100% of `Pawn.GroundSpeed`
 - [x] Endpoint config: damage at 0%/100% of `Pawn.GroundSpeed`
-- [x] Accuracy input range 50-100% (50 = vanilla spread, 100 = half spread)
-- [x] Damage input range 0x-2x
+- [x] Accuracy input range 0-100% (0 = worst, 100 = laser)
+- [x] Damage input range 0x-10x
 - [x] Real-time interpolation while accelerating/decelerating
 - [x] Jumping / falling uses the 100% speed endpoint
 - [x] Fire-time damage resolution

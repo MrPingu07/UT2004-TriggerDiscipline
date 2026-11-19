@@ -27,10 +27,10 @@ speed. Two endpoints are configured: one at 0% of `Pawn.GroundSpeed` and one at
 | Accuracy | 100% | 50% |
 | Damage multiplier | 1.50x | 1.00x |
 
-Accuracy is expressed as a percentage: **50% = vanilla spread plus a half-`AimError`
-aim cone**, **100% = half spread and no added cone** (laser-accurate for hitscan
-weapons). The GUI accepts 50-100%. The on-screen **Accuracy** indicator uses the same
-50-100 scale.
+Accuracy is expressed as a percentage from **0 to 100**. At 0% the weapon has 1.5x
+native spread plus a full `AimError` cone; at 50% it has vanilla spread plus a
+half-`AimError` cone; at 100% it has half spread and no added cone (laser-accurate for
+hitscan weapons). The on-screen **Accuracy** indicator uses the same 0-100 scale.
 
 Why an extra cone: most stock fire modes (`ShockBeamFire`, `SniperFire`, `LinkFire`,
 `ShieldFire`, projectile modes) leave `Spread` at `0`, so simply scaling it did nothing
@@ -51,14 +51,14 @@ The GUI is the recommended way. The INI keys are:
 
 ```ini
 [TriggerDiscipline.TriggerDisciplineMut]
-StillAccuracyPct=100.0       ; accuracy at 0% speed (50-100)
-RunAccuracyPct=50.0          ; accuracy at 100% speed (50-100)
-StillDamageMult=1.5          ; damage at 0% speed (0.0-2.0)
-RunDamageMult=1.0            ; damage at 100% speed (0.0-2.0)
+StillAccuracyPct=100.0       ; accuracy at 0% speed (0-100)
+RunAccuracyPct=50.0          ; accuracy at 100% speed (0-100)
+StillDamageMult=1.5          ; damage at 0% speed (0.0-10.0)
+RunDamageMult=1.0            ; damage at 100% speed (0.0-10.0)
 bStackMultiplicatively=False ; stack with UDamage instead of taking the max
 bDebugDraw=True              ; on-screen Damage / Accuracy indicators
 bEnableBotAI=True            ; bot crouch hints
-AimDeviationScale=0.5        ; aim-cone size at 50% accuracy (INI only)
+AimDeviationScale=1.0        ; aim-cone size at 0% accuracy (INI only)
 ```
 
 ## Compatibility
