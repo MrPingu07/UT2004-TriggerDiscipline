@@ -37,3 +37,4 @@
 - [ ] Optional per-player announcements when a crouched shot lands.
 - [ ] Statistics tracking (average speed, bonus damage dealt).
 - [ ] Automated in-game regression map.
+- [ ] Support additional ported packs (e.g., UT2004RPG, Ballistic Weapons).

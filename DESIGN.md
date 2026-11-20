@@ -51,7 +51,7 @@ this; inheriting from a generic base (`InstantFire`, `ProjectileFire`) does not,
 leaves weapons with no ammo. This was the root cause of the "no ammo / can't pick up
 ammo" bug and of the Classic Sniper Rifle failure.
 
-### 2. Speed fraction
+### 3. Speed fraction
 
 ```text
 MaxSpeed    = Pawn.GroundSpeed (fallback 800)
@@ -63,7 +63,7 @@ SpeedFactor = Clamp(Speed / MaxSpeed, 0, 1)
 - Horizontal velocity only, so slopes/stairs do not look like extra speed.
 - No settle timer, no stance state, no shared sampling. Fully real-time.
 
-### 3. Accuracy / spread
+### 4. Accuracy / spread
 
 ```text
 AccPct     = StillAccuracyPct + (RunAccuracyPct - StillAccuracyPct) * SpeedFactor
@@ -82,7 +82,7 @@ F.Spread   = BaseSpread * SpreadMult
 F.AimError = BaseAimError * SpreadMult   // used by bots and by the aim helper
 ```
 
-### 4. Why spread scaling alone was not enough
+### 5. Why spread scaling alone was not enough
 
 Most stock fire modes never define `Spread`, so it defaults to `0`. That includes
 `ShockBeamFire`, `SniperFire`, `LinkFire`, `ShieldFire`, `RocketFire`, `BioFire` and
@@ -118,7 +118,7 @@ the default 50% running accuracy the cone is half of the fire mode's `AimError`
 (`AimDeviationScale=1.0`). The scale is configurable in the INI but deliberately not
 shown in the GUI.
 
-### 5. Damage
+### 6. Damage
 
 ```text
 BaseDamageMult = Clamp(StillDamageMult + (RunDamageMult - StillDamageMult)
@@ -137,7 +137,7 @@ if (fully crouched) Final *= CrouchingDamageMult
 `CrouchingDamageMult` defaults to `1.0` (no bonus) and accepts 0x-10x. "Fully crouched"
 means `Pawn.bIsCrouched && Pawn.bWantsToCrouch`, which excludes both crouch transitions.
 
-### 6. UDamage
+### 7. UDamage
 
 `Pawn.TakeDamage()` multiplies damage by 2 whenever the attacker has UDamage
 (`InstigatedBy.HasUDamage()`). The mutator must **not** add that 2x again.
@@ -153,7 +153,7 @@ Because UDamage is checked when damage is applied, a projectile whose UDamage
 expires during flight will not receive the engine's 2x; the pre-UDamage value is used
 as-is. Hitscan weapons are unaffected.
 
-### 7. Modifier application
+### 8. Modifier application
 
 `TriggerDisciplineMut.static.ApplyModifiers(WeaponFire F, BaseSpread, BaseAimError,
 BaseDamageAtten)`:
@@ -173,7 +173,7 @@ Wrappers capture the current values, call `ApplyModifiers`, call
 - The multiplier is never applied twice to the same state.
 - Damage is resolved when the shot is fired, not when a projectile lands.
 
-### 8. Weapon-specific damage paths
+### 9. Weapon-specific damage paths
 
 A few fire modes do not use `DamageAtten`:
 
@@ -186,7 +186,7 @@ A few fire modes do not use `DamageAtten`:
 `ClassicShockBeamFire` / `ClassicShockProjFire` get the same combo-averaging and
 `ComboDamage` snapshot logic as their vanilla counterparts.
 
-### 9. HUD
+### 10. HUD
 
 `TriggerDisciplineDebugDisplay extends Interaction`, registered per local player by a
 1 Hz timer (`PC.Player.InteractionMaster.AddInteraction`). It renders:
@@ -201,7 +201,7 @@ Accuracy: 50%        (0-100%)
 The mutator is replicated (`bAlwaysRelevant`, `RemoteRole=ROLE_SimulatedProxy`) so
 remote clients can run their own HUD interaction. `bDebugDraw` defaults to `True`.
 
-### 10. Configure GUI
+### 11. Configure GUI
 
 `TriggerDisciplineConfig extends GUIPage` (`XInterface`) exposes exactly:
 
@@ -217,13 +217,13 @@ OK validates, writes `class'TriggerDisciplineMut'.default.*`, and calls
 `StaticSaveConfig()`. **Restore Defaults** repopulates the fields without saving until
 OK. **Cancel** closes without saving.
 
-### 11. Vehicles / warheads
+### 12. Vehicles / warheads
 
 `IsInVehicle` returns true when the controller's current pawn is a `Vehicle`, or when
 the controller pawn differs from the checked pawn and is a `RedeemerWarhead`. No
 bonuses are applied in either case.
 
-### 12. Bots
+### 13. Bots
 
 `TriggerDisciplinePawn` is spawned for bot-controlled pawns and periodically asks bots
 at medium-long range to crouch. Optional (`bEnableBotAI`).

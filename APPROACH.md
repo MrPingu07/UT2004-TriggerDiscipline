@@ -32,7 +32,7 @@ custom subclass. Replacing those with a vanilla-based wrapper loses their
 matching keeps modded weapons fully functional. A mod weapon that needs bonuses must
 get its own wrapper (see Extending below).
 
-## Per-shot modifier application
+## Per-shot modifier application (Weapon instances)
 
 `DoFireEffect()` is called immediately before a fire mode actually traces or spawns a
 projectile, after `ModeDoFire()` has applied vanilla logic such as Assault Rifle recoil
@@ -84,6 +84,10 @@ Because the current values are captured and restored around `Super.DoFireEffect(
 vanilla per-shot behaviour is preserved and values never compound across shots.
 
 ### Weapon-specific damage paths
+
+### Weapon pickup / base replacement
+
+The mutator also rewrites the FireModeClass defaults on WeaponPickup.InventoryType, xWeaponBase.WeaponType, and WeaponLocker.Weapons[i].WeaponClass when these actors are encountered in CheckReplacement. This ensures that weapons spawned from map pickups and lockers have the correct enhanced fire modes from the moment they are created.
 
 A few stock/UTClassic fire modes do not use `DamageAtten`:
 
