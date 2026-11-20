@@ -94,9 +94,12 @@ separate `exportcache` command performs that step successfully.
 `TriggerDisciplineBuild.ini` must list `UTClassic` and `XInterface` in
 `EditPackages`.
 
-## Design Principles
+## Documentation
 
-See [DESIGN.md](DESIGN.md), [APPROACH.md](APPROACH.md) and [ROADMAP.md](ROADMAP.md).
+- [Complete Technical Documentation](DOCUMENTATION.md) — architecture, API, building, extending, troubleshooting
+- [Design Document](DESIGN.md) — technical design decisions
+- [Approach](APPROACH.md) — development approach & rationale
+- [Roadmap](ROADMAP.md) — feature status & future work
 
 ## License
 
