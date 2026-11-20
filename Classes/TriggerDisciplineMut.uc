@@ -44,6 +44,11 @@ var config float AimDeviationScale;
 //--- Internal state ----------------------------------------------------------
 var TriggerDisciplinePawn TDPawn;
 
+// Optional mod support.  TriggerDisciplineWeaponPacks is loaded dynamically so
+// the core package keeps working when those weapon packs are not installed.
+var private TriggerDisciplineModRegistry ModRegistry;
+var private bool bTriedLoadModRegistry;
+
 // A client-side copy of this mutator is needed so the debug HUD Interaction can
 // be attached on remote clients as well as on a listen server host.
 simulated event PostNetBeginPlay()
@@ -79,6 +84,36 @@ static function TriggerDisciplineMut FindMutator(LevelInfo L)
 	}
 
 	return None;
+}
+
+// Lazily loads the optional weapon-pack registry.  DynamicLoadObject keeps the
+// core package independent of UC1Weapons/UC2Weapons/UT3Style/UT2341Weapons.
+function TriggerDisciplineModRegistry GetModRegistry()
+{
+	local class<TriggerDisciplineModRegistry> RegistryClass;
+
+	if (ModRegistry != None)
+		return ModRegistry;
+
+	if (bTriedLoadModRegistry)
+		return None;
+
+	bTriedLoadModRegistry = True;
+
+	RegistryClass = class<TriggerDisciplineModRegistry>(
+		DynamicLoadObject("TriggerDisciplineWeaponPacks.TriggerDisciplineWeaponPacksRegistry", class'Class'));
+
+	if (RegistryClass != None)
+	{
+		ModRegistry = Spawn(RegistryClass);
+		// log("TriggerDiscipline: Loaded weapon-pack registry from TriggerDisciplineWeaponPacks");
+	}
+	else
+	{
+		// log("TriggerDiscipline: TriggerDisciplineWeaponPacks not found or registry class missing");
+	}
+
+	return ModRegistry;
 }
 
 // Applies the current speed-based modifiers to a fire mode.  The caller passes
@@ -180,6 +215,8 @@ function PostBeginPlay()
 {
 	Super.PostBeginPlay();
 
+	// log("TriggerDiscipline PostBeginPlay");
+
 	FindTDPawn();
 
 	// The debug HUD is an Interaction; (re)attach it for the local player.
@@ -249,9 +286,16 @@ function bool CheckReplacement(Actor Other, out byte bSuperRelevant)
 	if (Weapon(Other) != None)
 	{
 		W = Weapon(Other);
+		// log("TriggerDiscipline CheckReplacement: weapon=" $ W $ " firemodes=" $ W.FireModeClass[0] $ "," $ W.FireModeClass[1]);
 		ModifyWeapon(W);
 		return true;
 	}
+
+	ReplaceWeaponFireModes(Other);
+		if (WeaponPickup(Other) != None || xWeaponBase(Other) != None || WeaponLocker(Other) != None)
+		{
+			// log("TriggerDiscipline ReplaceWeaponFireModes: " $ Other);
+		}
 
 	if (Pawn(Other) != None)
 	{
@@ -275,6 +319,59 @@ function bool CheckReplacement(Actor Other, out byte bSuperRelevant)
 	}
 
 	return Super.CheckReplacement(Other, bSuperRelevant);
+}
+
+function ReplaceWeaponFireModes(Actor A)
+{
+	local WeaponPickup WP;
+	local xWeaponBase XB;
+	local WeaponLocker WL;
+	local int i, j;
+
+	WP = WeaponPickup(A);
+	if (WP != None && WP.InventoryType != None)
+	{
+		for (i = 0; i < 2; i++)
+		{
+			if (class<Weapon>(WP.InventoryType).default.FireModeClass[i] != None)
+			{
+				class<Weapon>(WP.InventoryType).default.FireModeClass[i] = GetEnhancedFireModeClass(class<Weapon>(WP.InventoryType).default.FireModeClass[i]);
+			}
+		}
+		return;
+	}
+
+	XB = xWeaponBase(A);
+	if (XB != None && XB.WeaponType != None)
+	{
+		for (i = 0; i < 2; i++)
+		{
+			if (XB.WeaponType.default.FireModeClass[i] != None)
+			{
+				XB.WeaponType.default.FireModeClass[i] = GetEnhancedFireModeClass(XB.WeaponType.default.FireModeClass[i]);
+			}
+		}
+		return;
+	}
+
+	WL = WeaponLocker(A);
+	if (WL != None)
+	{
+		for (i = 0; i < WL.Weapons.Length; i++)
+		{
+			if (WL.Weapons[i].WeaponClass != None)
+			{
+				for (j = 0; j < 2; j++)
+				{
+					if (WL.Weapons[i].WeaponClass.default.FireModeClass[j] != None)
+					{
+						WL.Weapons[i].WeaponClass.default.FireModeClass[j] = GetEnhancedFireModeClass(WL.Weapons[i].WeaponClass.default.FireModeClass[j]);
+					}
+				}
+			}
+		}
+		return;
+	}
 }
 
 function ModifyWeapon(Weapon W)
@@ -301,6 +398,7 @@ function ModifyWeapon(Weapon W)
 function class<WeaponFire> GetEnhancedFireModeClass(class<WeaponFire> OriginalClass)
 {
 	local string N;
+	local TriggerDisciplineModRegistry R;
 
 	if (OriginalClass == None)
 		return None;
@@ -342,6 +440,12 @@ function class<WeaponFire> GetEnhancedFireModeClass(class<WeaponFire> OriginalCl
 	if (N == "UTClassic.ClassicShockProjFire")   return class'TriggerDisciplineClassicShockProjFire';
 	if (N == "UTClassic.ClassicTransFire")       return class'TriggerDisciplineClassicTransFire';
 	if (N == "UTClassic.ClassShieldFire")        return class'TriggerDisciplineClassShieldFire';
+
+	//--- Optional ported weapon packs -------------------------------------
+	// Loaded from TriggerDisciplineWeaponPacks only when that package exists.
+	R = GetModRegistry();
+	if (R != None)
+		return R.GetModFireModeClass(OriginalClass);
 
 	// Unknown/modded fire mode: leave it untouched so nothing breaks.
 	return None;
